@@ -1,0 +1,6 @@
+flask
+qrcode
+pillow
+python-dotenv
+ethers
+@walletconnect/client
