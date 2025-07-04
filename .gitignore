@@ -1,4 +1,16 @@
+# Ignore node_modules et fichiers temporaires
 node_modules/
-static/qrcode.png
-victims.log
+npm-debug.log
+.DS_Store
+
+# Ignore tout dans static sauf qrcode.png
+static/*
+!static/qrcode.png
+
+# Ignore fichiers Python temporaires
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 .env
+venv/
