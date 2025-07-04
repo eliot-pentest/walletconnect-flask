@@ -1,15 +1,15 @@
 {
+  "type": "module",
   "name": "walletconnect-generator",
   "version": "1.0.0",
-  "type": "module",
+  "main": "walletconnect.js",
   "scripts": {
     "start": "node walletconnect.js"
   },
   "dependencies": {
     "@walletconnect/sign-client": "^2.21.4",
-    "qrcode": "^1.5.1",
-    "dotenv": "^16.0.0",
-    "simple-git": "^3.16.0",
-    "ethers": "^5.7.2"
+    "dotenv": "^16.3.1",
+    "ethers": "^6.10.0",
+    "qrcode": "^1.5.3"
   }
 }

