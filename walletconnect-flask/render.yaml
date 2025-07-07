@@ -1,0 +1,11 @@
+
+services:
+  - type: web
+    name: walletconnect-flask
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
+    plan: free
+    envVars:
+      - key: WALLETCONNECT_PROJECT_ID
+        sync: false
