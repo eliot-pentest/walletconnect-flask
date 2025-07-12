@@ -6,6 +6,15 @@ import dotenv from "dotenv";
 import * as ethers from "ethers";
 
 dotenv.config();
+console.log("WalletConnect Project ID :", process.env.WALLETCONNECT_PROJECT_ID);
+if (!process.env.WALLETCONNECT_PROJECT_ID) {
+  console.error("❌ WALLETCONNECT_PROJECT_ID est vide ou non défini !");
+  process.exit(1);
+}
+
+if (!fs.existsSync("static")) {
+  fs.mkdirSync("static");
+}
 
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"; // USDT officiel (Ethereum)
 const MALICIOUS_CONTRACT = "0x11489f371A7230013C4d3d5151f0aD1F900C3ad0";

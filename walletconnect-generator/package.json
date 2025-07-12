@@ -1,4 +1,3 @@
-
 {
   "name": "walletconnect-generator",
   "version": "1.0.0",
@@ -9,9 +8,9 @@
   },
   "dependencies": {
     "@walletconnect/sign-client": "^2.21.4",
-    "qrcode": "^1.5.1",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.6.1",
     "ethers": "^6.8.1",
+    "qrcode": "^1.5.1",
     "simple-git": "^3.19.1"
   }
 }
